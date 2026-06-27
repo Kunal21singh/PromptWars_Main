@@ -1,21 +1,17 @@
 // Gemini API Connector & Fallback Simulation Engine for Zenith
 
-// Local storage keys
-const API_KEY_STORAGE_KEY = 'zenith_gemini_api_key';
+// In-memory API key storage: keep the key in runtime memory and avoid persisting it into localStorage.
+let cachedApiKey = '';
 
 export const GeminiConfig = {
   getApiKey() {
-    return localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+    return cachedApiKey;
   },
   setApiKey(key) {
-    if (key) {
-      localStorage.setItem(API_KEY_STORAGE_KEY, key);
-    } else {
-      localStorage.removeItem(API_KEY_STORAGE_KEY);
-    }
+    cachedApiKey = key ? key.trim() : '';
   },
   hasKey() {
-    return !!this.getApiKey();
+    return Boolean(cachedApiKey);
   }
 };
 

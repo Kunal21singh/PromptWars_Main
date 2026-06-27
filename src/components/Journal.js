@@ -1,5 +1,6 @@
 // Daily AI Journaling Component for Zenith
 import { GenAI } from '../utils/gemini.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 const JOURNAL_PROMPTS = [
   "How did today's mock tests / revision go? What did you feel when you got stuck?",
@@ -100,7 +101,7 @@ export default {
 
           <div class="analysis-section-title">Stress Triggers</div>
           <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom: 1.5rem;">
-            ${triggers.map(t => `<span style="font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-light); padding:0.25rem 0.6rem; border-radius:12px; color:var(--text-secondary); font-weight:600;">${t}</span>`).join('')}
+            ${triggers.map(t => `<span style="font-size:0.75rem; background:var(--bg-secondary); border:1px solid var(--border-light); padding:0.25rem 0.6rem; border-radius:12px; color:var(--text-secondary); font-weight:600;">${escapeHtml(t)}</span>`).join('')}
           </div>
 
           <div class="analysis-section-title">Counseling Advice</div>

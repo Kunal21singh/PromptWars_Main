@@ -58,10 +58,7 @@ export const store = {
 
     this.state = nextState;
     
-    // Persist session locally so page refreshes don't log the user out
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
-    
-    this.listeners.forEach(listener => listener(this.state));
+        this.listeners.forEach(listener => listener(this.state));
 
     // Async syncable state synchronization with BigQuery (skip Pomodoro/Soundscape tickers to save requests)
     const hasSyncableUpdates = updates.profile || updates.moodLogs || updates.journals || updates.chatHistory;
@@ -84,7 +81,7 @@ export const store = {
       const response = await fetch('/api/update-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: this.state.currentUser, profileData })
+        body: JSON.stringify({ profileData })
       });
       const data = await response.json();
       if (!data.success) {
@@ -190,7 +187,13 @@ export const store = {
     }
   },
 
-  logoutUser() {
+  async logoutUser() {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('[Store] Logout request failed:', e);
+    }
+
     this.setState({
       currentUser: null,
       isOnboarded: false,
@@ -218,6 +221,11 @@ export const store = {
       return data;
     } catch (e) {
       console.error('[Store] Password change error:', e);
+      return { success: false, message: 'Server connection error.' };
+    }
+  }
+};
+
       return { success: false, message: 'Server connection error.' };
     }
   }

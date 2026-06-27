@@ -398,6 +398,7 @@ app.post('/api/logout', (req, res) => {
     res.clearCookie('zenith.sid');
     res.json({ success: true, message: 'Logged out successfully.' });
   });
+});
 
 // Direct any unmatched routes to index.html for Single Page Application routing
 app.get('*', (req, res) => {

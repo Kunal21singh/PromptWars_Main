@@ -1,5 +1,6 @@
 // Login Component for Zenith Student Companion
 import { store } from '../store.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export default {
   render(state) {
@@ -7,7 +8,7 @@ export default {
 
     let accountSelectorHtml = '';
     if (accounts.length > 0) {
-      const options = accounts.map(acc => `<option value="${acc}">${acc}</option>`).join('');
+      const options = accounts.map(acc => `<option value="${escapeHtml(acc)}">${escapeHtml(acc)}</option>`).join('');
       accountSelectorHtml = `
         <div class="form-group">
           <label for="login-username">Select Profile</label>

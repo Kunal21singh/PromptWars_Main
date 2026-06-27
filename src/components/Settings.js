@@ -1,6 +1,7 @@
 // Settings and Profile configuration Component for Zenith
 import { GeminiConfig } from '../utils/gemini.js';
 import { store } from '../store.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 const AVAILABLE_STRESSORS = [
   'Mock Tests', 
@@ -33,15 +34,15 @@ export default {
       const isSelected = stressors.includes(s);
       return `
         <label class="checkbox-label ${isSelected ? 'selected' : ''}">
-          <input type="checkbox" class="stressor-checkbox" value="${s}" ${isSelected ? 'checked' : ''} style="display:none;" />
-          <span>${s}</span>
+          <input type="checkbox" class="stressor-checkbox" value="${escapeHtml(s)}" ${isSelected ? 'checked' : ''} style="display:none;" />
+          <span>${escapeHtml(s)}</span>
         </label>
       `;
     }).join('');
 
     // Render Exam dropdown
     const examsDropdownHtml = AVAILABLE_EXAMS.map(e => `
-      <option value="${e}" ${exam === e ? 'selected' : ''}>${e}</option>
+      <option value="${escapeHtml(e)}" ${exam === e ? 'selected' : ''}>${escapeHtml(e)}</option>
     `).join('');
 
     return `
@@ -61,7 +62,7 @@ export default {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group">
                 <label for="profile-name-input">Aspirant Name</label>
-                <input type="text" class="form-control" id="profile-name-input" value="${name}" placeholder="Aspirant" />
+                <input type="text" class="form-control" id="profile-name-input" value="${escapeHtml(name)}" placeholder="Aspirant" />
               </div>
               <div class="form-group">
                 <label for="profile-exam-select">Target Exam / Milestone</label>
@@ -74,11 +75,11 @@ export default {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
               <div class="form-group">
                 <label for="profile-date-input">Target Exam Date</label>
-                <input type="date" class="form-control" id="profile-date-input" value="${examDate}" />
+                <input type="date" class="form-control" id="profile-date-input" value="${escapeHtml(examDate)}" />
               </div>
               <div class="form-group">
                 <label for="profile-hours-input">Daily Study Goal (Hours)</label>
-                <input type="number" class="form-control" id="profile-hours-input" value="${dailyHoursTarget}" min="1" max="18" />
+                <input type="number" class="form-control" id="profile-hours-input" value="${escapeHtml(String(dailyHoursTarget))}" min="1" max="18" />
               </div>
             </div>
 
@@ -110,7 +111,15 @@ export default {
               <label for="settings-confirm-password">Confirm New Password</label>
               <input type="password" class="form-control" id="settings-confirm-password" placeholder="Confirm new password" required />
             </div>
-            
+            <div class="form-group">
+              <label for="settings-api-key">Gemini API Key</label>
+              <input type="password" class="form-control" id="settings-api-key" placeholder="Enter Gemini API key" value="${escapeHtml(apiKey)}" autocomplete="new-password" />
+              <small style="color: var(--text-muted);">The key is stored only for this browser session and not persisted in local storage.</small>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
+              <button class="btn btn-secondary" id="btn-save-api-key" style="flex: 1; min-width: 150px;">Save API Key</button>
+              <button class="btn btn-danger" id="btn-clear-api-key" style="flex: 1; min-width: 150px;">Clear API Key</button>
+            </div>
             <button class="btn btn-primary" id="btn-change-password" style="width: 100%; margin-top: 0.5rem;">
               Update Password
             </button>

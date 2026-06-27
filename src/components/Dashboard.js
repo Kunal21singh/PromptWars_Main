@@ -1,12 +1,15 @@
 // Dashboard Component for Zenith
+import { escapeHtml } from '../utils/sanitize.js';
 
 export default {
   render(state) {
     const { name, exam, examDate } = state.profile;
     
     // Calculate days remaining to exam
+    const safeName = escapeHtml(name || 'Aspirant');
+    const safeExam = escapeHtml(exam || 'Your exam');
     const daysLeft = Math.ceil((new Date(examDate) - new Date()) / (1000 * 60 * 60 * 24));
-    const countdownText = daysLeft > 0 ? `${daysLeft} days until ${exam}` : `Exam Day is here!`;
+    const countdownText = daysLeft > 0 ? `${daysLeft} days until ${safeExam}` : `Exam Day is here!`;
 
     // Calculate current average stress index (0-100, where higher is more stress)
     // We compute this from mood logs (mood score represents well-being: 100 - score = stress)
@@ -80,7 +83,7 @@ export default {
             </svg>
           </div>
           <div class="insight-body">
-            <div class="insight-title">${t}</div>
+            <div class="insight-title">${escapeHtml(t)}</div>
             <div class="insight-desc">Triggering stress spikes during recent study cycles.</div>
           </div>
         </div>
@@ -105,7 +108,7 @@ export default {
     return `
       <div class="view-header fade-in">
         <div class="view-title-group">
-          <h1>Stay Centered, ${name}</h1>
+          <h1>Stay Centered, ${safeName}</h1>
           <div class="view-subtitle">A digital workspace designed to protect your mental well-being.</div>
         </div>
         <div class="logo-badge" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">

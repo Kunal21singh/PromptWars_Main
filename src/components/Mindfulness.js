@@ -1,5 +1,6 @@
 // Mindfulness & Coping Hub Component for Zenith
 import { GenAI } from '../utils/gemini.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 let activeSubTab = 'breathing'; // 'breathing' | 'soundscapes' | 'reframer'
 
@@ -231,11 +232,11 @@ function renderReframerView() {
     outputPanelContent = `
       <div class="analysis-section-title">Detected distortion</div>
       <div style="font-weight: 700; color: var(--accent-danger); font-size: 0.9rem; margin-bottom: 0.75rem;">
-        ${reframerResult.distortionType}
+        ${escapeHtml(reframerResult.distortionType)}
       </div>
 
       <div class="reframer-card old" style="margin-bottom: 1rem;">
-        "${reframerInputText}"
+        "${escapeHtml(reframerInputText)}"
       </div>
       
       <div class="reframer-arrow" style="margin-bottom: 1rem;">
@@ -247,7 +248,7 @@ function renderReframerView() {
 
       <div class="analysis-section-title">CBT Balanced Perspective</div>
       <div class="reframer-card new">
-        ${reframerResult.reframedThought}
+        ${escapeHtml(reframerResult.reframedThought)}
       </div>
     `;
   } else {

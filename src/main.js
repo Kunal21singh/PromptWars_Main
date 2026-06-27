@@ -1,6 +1,7 @@
 // Central Coordinator for Zenith Student Companion
 import { store } from './store.js';
 import { AudioSynth } from './utils/audioGenerator.js';
+import { escapeHtml } from './utils/sanitize.js';
 
 // Import Views
 import Dashboard from './components/Dashboard.js';
@@ -153,6 +154,8 @@ function renderApp(state) {
 
   const { activeTab } = state;
   const avatarInitial = state.profile.name ? state.profile.name.charAt(0).toUpperCase() : 'A';
+  const safeProfileName = escapeHtml(state.profile.name || 'Aspirant');
+  const safeProfileExam = escapeHtml(state.profile.exam || 'Exam');
   
   // Renders core structure
   appContainer.innerHTML = `
@@ -235,11 +238,11 @@ function renderApp(state) {
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <div class="profile-avatar">${avatarInitial}</div>
               <div class="profile-info">
-                <div class="profile-name">${state.profile.name}</div>
-                <div class="profile-exam">${state.profile.exam} Candidate</div>
+                <div class="profile-name">${safeProfileName}</div>
+                <div class="profile-exam">${safeProfileExam} Candidate</div>
               </div>
             </div>
-            <button id="sidebar-logout-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: all 0.2s;" onmouseover="this.style.color='var(--accent-danger)'" onmouseout="this.style.color='var(--text-muted)'" title="Log Out / Lock Account">
+            <button id="sidebar-logout-btn" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; transition: all 0.2s;" title="Log Out / Lock Account">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <polyline points="16 17 21 12 16 7"/>
@@ -400,5 +403,4 @@ syncSoundscape(store.state);
 syncPomodoroTicker(store.state);
 renderApp(store.state);
 
-// Add window level reference to store to assist components if required
-window.zenithStore = store;
+// Store is intentionally kept within module scope for security; avoid exposing it globally.
