@@ -111,15 +111,6 @@ export default {
               <label for="settings-confirm-password">Confirm New Password</label>
               <input type="password" class="form-control" id="settings-confirm-password" placeholder="Confirm new password" required />
             </div>
-            <div class="form-group">
-              <label for="settings-api-key">Gemini API Key</label>
-              <input type="password" class="form-control" id="settings-api-key" placeholder="Enter Gemini API key" value="${escapeHtml(apiKey)}" autocomplete="new-password" />
-              <small style="color: var(--text-muted);">The key is stored only for this browser session and not persisted in local storage.</small>
-            </div>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem;">
-              <button class="btn btn-secondary" id="btn-save-api-key" style="flex: 1; min-width: 150px;">Save API Key</button>
-              <button class="btn btn-danger" id="btn-clear-api-key" style="flex: 1; min-width: 150px;">Clear API Key</button>
-            </div>
             <button class="btn btn-primary" id="btn-change-password" style="width: 100%; margin-top: 0.5rem;">
               Update Password
             </button>

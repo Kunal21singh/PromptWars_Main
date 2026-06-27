@@ -133,6 +133,7 @@ export default {
       goToLoginLink.addEventListener('click', (e) => {
         e.preventDefault();
         setState({
+          authView: 'login',
           showForceOnboarding: false
         });
       });

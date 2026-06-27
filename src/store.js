@@ -4,6 +4,7 @@ const DEFAULT_STATE = {
   currentUser: null,
   activeTab: 'dashboard',
   isOnboarded: false,
+  authView: 'choice',
   accountsList: [],
   profile: {
     name: 'Aspirant',
@@ -197,6 +198,7 @@ export const store = {
     this.setState({
       currentUser: null,
       isOnboarded: false,
+      authView: 'choice',
       activeTab: 'dashboard',
       profile: { ...DEFAULT_STATE.profile },
       moodLogs: [...DEFAULT_STATE.moodLogs],
@@ -221,11 +223,6 @@ export const store = {
       return data;
     } catch (e) {
       console.error('[Store] Password change error:', e);
-      return { success: false, message: 'Server connection error.' };
-    }
-  }
-};
-
       return { success: false, message: 'Server connection error.' };
     }
   }

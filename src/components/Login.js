@@ -114,8 +114,8 @@ export default {
     if (goToOnboardingLink) {
       goToOnboardingLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Set state to force Onboarding view (isOnboarded false shows onboarding)
         setState({
+          authView: 'signup',
           isOnboarded: false,
           showForceOnboarding: true // local flag to distinguish from initial load with no accounts
         });

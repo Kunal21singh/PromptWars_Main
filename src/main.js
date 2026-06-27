@@ -3,6 +3,8 @@ import { store } from './store.js';
 import { AudioSynth } from './utils/audioGenerator.js';
 import { escapeHtml } from './utils/sanitize.js';
 
+console.log('[Zenith] src/main.js loaded');
+
 // Import Views
 import Dashboard from './components/Dashboard.js';
 import Journal from './components/Journal.js';
@@ -124,6 +126,46 @@ function syncPomodoroTicker(state) {
   }
 }
 
+// Auth choice screen for first-time visitors
+function renderAuthChoice(state) {
+  return `
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; background: var(--bg-primary); width: 100%;">
+      <div class="card fade-in" style="max-width: 520px; width: 100%; border: 1px solid var(--border-accent); box-shadow: var(--border-glow); padding: 2.5rem; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px);">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Welcome to Zenith</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 420px; margin: 0 auto;">Are you returning with an existing account or are you setting up Zenith for the first time?</p>
+        </div>
+        <div style="display: grid; gap: 1rem;">
+          <button class="btn btn-primary" id="btn-auth-login" style="padding: 0.95rem; font-size: 1rem;">I already have an account</button>
+          <button class="btn btn-secondary" id="btn-auth-signup" style="padding: 0.95rem; font-size: 1rem;">No, I need to create one</button>
+        </div>
+        <div style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.85rem; text-align: center;">
+          If you are not sure, choose the second option and we will create your prep profile.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function attachAuthChoiceListeners() {
+  const loginButton = document.getElementById('btn-auth-login');
+  const signupButton = document.getElementById('btn-auth-signup');
+
+  if (loginButton) {
+    loginButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      store.setState({ authView: 'login' });
+    });
+  }
+
+  if (signupButton) {
+    signupButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      store.setState({ authView: 'signup' });
+    });
+  }
+}
+
 // Main render function
 function renderApp(state) {
   const appContainer = document.getElementById('app');
@@ -131,23 +173,25 @@ function renderApp(state) {
 
   // Routing for authentication / onboarding
   if (!state.currentUser) {
-    const accounts = store.getAccountsList();
-    const showOnboarding = (accounts.length === 0) || state.showForceOnboarding;
-    
-    if (showOnboarding) {
+    const authView = state.authView || 'choice';
+
+    if (authView === 'signup') {
       appContainer.innerHTML = Onboarding.render(state);
       try {
         Onboarding.attachListeners(state, (updates) => store.setState(updates));
       } catch (err) {
         console.error('Error attaching Onboarding listeners:', err);
       }
-    } else {
+    } else if (authView === 'login') {
       appContainer.innerHTML = Login.render(state);
       try {
         Login.attachListeners(state, (updates) => store.setState(updates));
       } catch (err) {
         console.error('Error attaching Login listeners:', err);
       }
+    } else {
+      appContainer.innerHTML = renderAuthChoice(state);
+      attachAuthChoiceListeners();
     }
     return;
   }
