@@ -1,8 +1,9 @@
 import express from 'express';
+import session from 'express-session';
+import bcrypt from 'bcryptjs';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
-import crypto from 'crypto';
 import { BigQuery } from '@google-cloud/bigquery';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -12,6 +13,18 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(express.json());
+app.use(session({
+  name: 'zenith.sid',
+  secret: process.env.SESSION_SECRET || 'zenith_session_secret_change_me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24
+  }
+}));
 
 // Serve static assets from the root and src directories
 app.use(express.static(__dirname));
@@ -90,34 +103,16 @@ async function initBigQuery() {
 initBigQuery();
 
 // ==========================================
-// Password Encryption & Decryption (AES-256-CBC)
+// Password Hashing & Comparison
 // ==========================================
-const ALGORITHM = 'aes-256-cbc';
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'zenith_default_secret_key_32_bytes';
-const KEY_BUF = Buffer.from(ENCRYPTION_KEY.padEnd(32, '0').substring(0, 32));
+const SALT_ROUNDS = 12;
 
-export function encodePassword(password) {
-  const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, KEY_BUF, iv);
-  let encrypted = cipher.update(password, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return iv.toString('hex') + ':' + encrypted;
+export async function hashPassword(password) {
+  return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export function decodePassword(encodedPassword) {
-  try {
-    const parts = encodedPassword.split(':');
-    if (parts.length !== 2) return null;
-    const iv = Buffer.from(parts[0], 'hex');
-    const encryptedText = Buffer.from(parts[1], 'hex');
-    const decipher = crypto.createDecipheriv(ALGORITHM, KEY_BUF, iv);
-    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    return decrypted;
-  } catch (e) {
-    console.error('[Crypto] Decryption error:', e.message);
-    return null;
-  }
+export async function comparePassword(password, hashedPassword) {
+  return bcrypt.compare(password, hashedPassword);
 }
 
 // ==========================================
@@ -262,8 +257,11 @@ app.post('/api/register', async (req, res) => {
       return res.status(400).json({ success: false, message: 'An account with this name already exists.' });
     }
 
-    const encodedPassword = encodePassword(password);
-    await insertUser(username, encodedPassword, profile);
+    const hashedPassword = await hashPassword(password);
+    await insertUser(username, hashedPassword, profile);
+
+    req.session.username = username.trim();
+    req.session.authenticated = true;
 
     res.json({
       success: true,
@@ -290,8 +288,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Account not found.' });
     }
 
-    const decodedPassword = decodePassword(userRecord.password);
-    if (decodedPassword !== password) {
+    const passwordMatch = await comparePassword(password, userRecord.password);
+    if (!passwordMatch) {
       return res.status(400).json({ success: false, message: 'Incorrect password.' });
     }
 
@@ -301,6 +299,9 @@ app.post('/api/login', async (req, res) => {
     } catch (e) {
       console.error('Failed to parse user profile JSON payload:', e);
     }
+
+    req.session.username = userRecord.username;
+    req.session.authenticated = true;
 
     res.json({
       success: true,
@@ -320,10 +321,19 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Sync updated user data (profile state, moodLogs, journals, chatHistory)
-app.post('/api/update-profile', async (req, res) => {
-  const { username, profileData } = req.body;
-  if (!username || !profileData) {
-    return res.status(400).json({ success: false, message: 'Username and profile data are required.' });
+function ensureAuthenticated(req, res, next) {
+  if (req.session && req.session.authenticated && req.session.username) {
+    return next();
+  }
+  return res.status(401).json({ success: false, message: 'Authentication required.' });
+}
+
+app.post('/api/update-profile', ensureAuthenticated, async (req, res) => {
+  const profileData = req.body.profileData;
+  const username = req.session.username;
+
+  if (!profileData) {
+    return res.status(400).json({ success: false, message: 'Profile data is required.' });
   }
 
   try {
@@ -343,9 +353,10 @@ app.post('/api/update-profile', async (req, res) => {
 });
 
 // Change user password
-app.post('/api/change-password', async (req, res) => {
-  const { username, oldPassword, newPassword } = req.body;
-  if (!username || !oldPassword || !newPassword) {
+app.post('/api/change-password', ensureAuthenticated, async (req, res) => {
+  const username = req.session.username;
+  const { oldPassword, newPassword } = req.body;
+  if (!oldPassword || !newPassword) {
     return res.status(400).json({ success: false, message: 'Missing parameters.' });
   }
 
@@ -355,12 +366,12 @@ app.post('/api/change-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Account not found.' });
     }
 
-    const decodedPassword = decodePassword(userRecord.password);
-    if (decodedPassword !== oldPassword) {
+    const passwordMatch = await comparePassword(oldPassword, userRecord.password);
+    if (!passwordMatch) {
       return res.status(400).json({ success: false, message: 'Incorrect old password.' });
     }
 
-    const newEncodedPassword = encodePassword(newPassword);
+    const newHashedPassword = await hashPassword(newPassword);
 
     let parsedProfile = {};
     try {
@@ -369,7 +380,7 @@ app.post('/api/change-password', async (req, res) => {
       console.error('Failed to parse user profile JSON:', e);
     }
 
-    await insertUser(username, newEncodedPassword, parsedProfile);
+    await insertUser(username, newHashedPassword, parsedProfile);
 
     res.json({ success: true, message: 'Password updated successfully!' });
   } catch (e) {
@@ -377,6 +388,16 @@ app.post('/api/change-password', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error during password update.' });
   }
 });
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ success: false, message: 'Logout failed.' });
+    }
+    res.clearCookie('zenith.sid');
+    res.json({ success: true, message: 'Logged out successfully.' });
+  });
 
 // Direct any unmatched routes to index.html for Single Page Application routing
 app.get('*', (req, res) => {

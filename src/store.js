@@ -1,7 +1,5 @@
 // Central State Store for Zenith Well-being Companion
 
-const STORAGE_KEY = 'zenith_app_state';
-
 const DEFAULT_STATE = {
   currentUser: null,
   activeTab: 'dashboard',
@@ -39,19 +37,8 @@ const DEFAULT_STATE = {
   }
 };
 
-function loadState() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return DEFAULT_STATE;
-  try {
-    const parsed = JSON.parse(data);
-    return { ...DEFAULT_STATE, ...parsed };
-  } catch (e) {
-    return DEFAULT_STATE;
-  }
-}
-
 export const store = {
-  state: loadState(),
+  state: { ...DEFAULT_STATE },
   listeners: [],
   
   subscribe(listener) {
@@ -225,7 +212,7 @@ export const store = {
       const response = await fetch('/api/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: this.state.currentUser, oldPassword, newPassword })
+        body: JSON.stringify({ oldPassword, newPassword })
       });
       const data = await response.json();
       return data;
