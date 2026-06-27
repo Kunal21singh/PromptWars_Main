@@ -1,0 +1,14 @@
+{
+  "name": "zenith-student-wellbeing",
+  "version": "1.0.0",
+  "description": "Zenith - Generative AI Exam Stress & Student Well-being Companion",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "@google-cloud/bigquery": "^7.7.0"
+  }
+}
