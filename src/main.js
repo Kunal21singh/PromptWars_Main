@@ -251,7 +251,7 @@ function renderApp(state) {
       </aside>
 
       <!-- MOBILE HEADER -->
-      <header class="mobile-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <header class="mobile-header">
         <div class="logo-container" style="margin-bottom: 0; gap: 0.5rem;">
           <svg class="logo-icon" style="width:24px; height:24px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 2L2 22h20L12 2zm0 3.99L18.8 19H5.2L12 5.99zM12 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
